@@ -1,0 +1,1 @@
+export function renderTeam(container, teamName) { container.innerHTML = `<h1>צוות: ${teamName}</h1>`; }

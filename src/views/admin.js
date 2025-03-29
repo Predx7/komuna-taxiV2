@@ -1,0 +1,1 @@
+export function renderAdmin(container) { container.innerHTML = '<h1>עמוד אדמין</h1>'; }
