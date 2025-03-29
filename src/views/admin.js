@@ -42,7 +42,7 @@ export async function renderAdmin(container) {
       "Content-Type": "application/json"
     };
 
-    const namesRes = await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, { headers });
+    const namesRes = e?.preventDefault?.(); await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, { headers });
     const names = await namesRes.json();
 
     const grouped = {};
@@ -80,10 +80,10 @@ export async function renderAdmin(container) {
     teams.forEach(team => {
       const input = document.getElementById(`input-${team}`);
       input.addEventListener("keypress", async (e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter") { e.preventDefault();
           const name = input.value.trim();
           if (!name) return;
-          await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, {
+          e?.preventDefault?.(); await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, {
             method: "POST",
             headers,
             body: JSON.stringify({ name, team })
@@ -119,7 +119,7 @@ window.addNameToTeam = async (team) => {
     Authorization: "Bearer " + SUPABASE_KEY,
     "Content-Type": "application/json"
   };
-  await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, {
+  e?.preventDefault?.(); await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, {
     method: "POST",
     headers,
     body: JSON.stringify({ name, team })
