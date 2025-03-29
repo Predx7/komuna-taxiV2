@@ -1,62 +1,52 @@
 
+const SUPABASE_URL = "https://zehjecgkpjnmnbfqlkba.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaGplY2drcGpubW5iZnFsa2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNTA0NzAsImV4cCI6MjA1ODgyNjQ3MH0.uWSy84K8j4UMxsjDnx0ZReAymxfOb96fzINH_P3LnSo";
+
 export async function renderTeam(container, teamName) {
+  container.innerHTML = "<h1 class='text-white text-xl mb-4'>טוען...</h1>";
+
   if (!teamName) {
-    container.innerHTML = '<div class="p-6 text-center text-white">לא נבחר צוות. אנא התחבר מחדש.</div>';
+    container.innerHTML = "<p class='text-red-500'>שגיאה בטעינת הנתונים.</p>";
     return;
   }
 
-  container.innerHTML = '<div class="p-6 text-center text-white">טוען נתונים...</div>';
-
-  const supabaseUrl = "https://zehjecgkpjnmnbfqlkba.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaGplY2drcGpubW5iZnFsa2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNTA0NzAsImV4cCI6MjA1ODgyNjQ3MH0.uWSy84K8j4UMxsjDnx0ZReAymxfOb96fzINH_P3LnSo";
-
-  const headers = {
-    apikey: supabaseKey,
-    Authorization: "Bearer " + supabaseKey
-  };
-
   try {
-    const namesRes = await fetch(`${supabaseUrl}/rest/v1/name_to_team?team=eq.${teamName}`, { headers });
-    const namesData = await namesRes.json();
-    const names = namesData.map(n => n.name);
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: "Bearer " + SUPABASE_KEY
+    };
 
-    const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-    const receiptsRes = await fetch(`${supabaseUrl}/rest/v1/receipts?date=gte.${firstOfMonth}`, { headers });
-    const receiptsData = await receiptsRes.json();
-
-    const teamReceipts = receiptsData.filter(r => names.includes(r.name));
-    const totalSpent = teamReceipts.reduce((sum, r) => sum + (r.amount || 0), 0);
-
-    const teamRes = await fetch(`${supabaseUrl}/rest/v1/teams?name=eq.${teamName}`, { headers });
+    const teamRes = await fetch(`${SUPABASE_URL}/rest/v1/teams?name=eq.${teamName}`, { headers });
     const teamData = await teamRes.json();
-    const budget = teamData.length > 0 ? teamData[0].budget : 0;
-    const remaining = budget - totalSpent;
+    const team = teamData[0];
 
-    const receiptListHtml = teamReceipts.length > 0
-      ? teamReceipts.map(r => `
-        <li class="mb-2 border-b border-gray-700 pb-2">
-          ${r.name} – ${r.amount} ₪ – ${new Date(r.date).toLocaleDateString('he-IL')}
-        </li>`).join("")
-      : "<li>אין קבלות עדיין.</li>";
+    const namesRes = await fetch(`${SUPABASE_URL}/rest/v1/name_to_team?team=eq.${teamName}`, { headers });
+    const names = await namesRes.json();
+
+    if (!team) {
+      container.innerHTML = "<p class='text-white'>הצוות לא נמצא.</p>";
+      return;
+    }
+
+    const spent = team.spent || 0;
+    const budget = team.budget || 0;
+    const remaining = budget - spent;
 
     container.innerHTML = `
-      <div class="p-6 text-white">
-        <h1 class="text-2xl mb-4 font-bold">צוות ${teamName}</h1>
-        <div class="bg-gray-800 rounded-lg p-4 shadow mb-6">
-          <p>💰 תקציב חודשי: <strong>${budget} ₪</strong></p>
-          <p>💸 הוצאות החודש: <strong>${totalSpent} ₪</strong></p>
-          <p>📦 נשאר: <strong>${remaining} ₪</strong></p>
+      <div class="text-white p-6 space-y-4">
+        <h1 class="text-2xl font-bold">צוות ${teamName}</h1>
+        <p>💸 תקציב: ${budget} ש״ח</p>
+        <p>🚕 הוצאות: ${spent} ש״ח</p>
+        <p>💰 נשאר: ${remaining} ש״ח</p>
+        <div>
+          <h2 class="text-lg mt-4 mb-2 underline">חברי צוות:</h2>
+          <ul class="list-disc list-inside">
+            ${names.map(n => `<li>${n.name}</li>`).join("") || "<li>אין שמות משויכים</li>"}
+          </ul>
         </div>
-        <h2 class="text-xl mb-2">רשימת קבלות:</h2>
-        <ul class="bg-gray-800 rounded-lg p-4">
-          ${receiptListHtml}
-        </ul>
       </div>
     `;
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = '<div class="p-6 text-red-500 text-center">שגיאה בטעינת הנתונים.</div>';
+  } catch (e) {
+    container.innerHTML = "<p class='text-red-500'>שגיאה בטעינת המידע.</p>";
   }
 }
