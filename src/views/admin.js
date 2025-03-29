@@ -1,112 +1,105 @@
 
 export async function renderAdmin(container) {
-  container.innerHTML = '<div class="p-6 text-center text-white">טוען קבלות...</div>';
+  container.innerHTML = `
+    <div class="p-6 text-white">
+      <h1 class="text-2xl mb-4 font-bold">ניהול אדמין</h1>
+      <div class="flex gap-4 mb-6">
+        <button class="tab-btn bg-gray-700 px-4 py-2 rounded" data-tab="receipts">📄 קבלות</button>
+        <button class="tab-btn bg-gray-700 px-4 py-2 rounded" data-tab="names">👥 שיוך שמות</button>
+        <button class="tab-btn bg-gray-700 px-4 py-2 rounded" data-tab="month">📅 תחילת חודש</button>
+      </div>
+      <div id="tab-content" class="mt-6"></div>
+    </div>
+  `;
 
-  const supabaseUrl = "https://zehjecgkpjnmnbfqlkba.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaGplY2drcGpubW5iZnFsa2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNTA0NzAsImV4cCI6MjA1ODgyNjQ3MH0.uWSy84K8j4UMxsjDnx0ZReAymxfOb96fzINH_P3LnSo";
+  document.querySelectorAll(".tab-btn").forEach(btn =>
+    btn.addEventListener("click", () => showTab(btn.dataset.tab))
+  );
 
-  const headers = {
-    apikey: supabaseKey,
-    Authorization: "Bearer " + supabaseKey,
-    "Content-Type": "application/json"
-  };
+  showTab("receipts");
 
-  const teams = ["hulda", "mazkeret", "habatselet", "almog", "giva"];
+  async function showTab(tab) {
+    const tabDiv = document.getElementById("tab-content");
+    if (tab === "names") {
+      renderNamesTab(tabDiv);
+    } else if (tab === "month") {
+      tabDiv.innerHTML = '<p class="text-white">🔧 לשונית תחילת חודש תגיע בשלב הבא...</p>';
+    } else {
+      tabDiv.innerHTML = '<p class="text-white">📄 לשונית הקבלות הרגילה תישאר כאן (בהמשך נעדכן אותה מחדש).</p>';
+    }
+  }
 
-  try {
-    const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  async function renderNamesTab(container) {
+    const teams = ["חולדה", "מזכרת", "חבצלת", "אלמוג", "גבעה"];
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json"
+    };
 
-    const receiptsRes = await fetch(`${supabaseUrl}/rest/v1/receipts?date=gte.${firstOfMonth}`, { headers });
-    const receipts = await receiptsRes.json();
+    const namesRes = await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, { headers });
+    const names = await namesRes.json();
 
-    const namesRes = await fetch(`${supabaseUrl}/rest/v1/name_to_team`, { headers });
-    const nameToTeam = await namesRes.json();
-
-    let html = `
-      <div class="p-6 text-white">
-        <h1 class="text-2xl mb-4 font-bold">אזור ניהול</h1>
-        <button onclick="resetBudgets()" class="mb-6 bg-red-600 px-4 py-2 rounded hover:bg-red-700">איפוס תקציב כללי</button>
-        <table class="w-full bg-gray-800 rounded-lg text-right">
-          <thead>
-            <tr class="border-b border-gray-600">
-              <th class="p-3">שם</th>
-              <th class="p-3">סכום</th>
-              <th class="p-3">תאריך</th>
-              <th class="p-3">צוות</th>
-              <th class="p-3">שיוך</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    receipts.forEach((receipt) => {
-      const existing = nameToTeam.find(n => n.name === receipt.name);
-      const currentTeam = existing ? existing.team : null;
-
-      html += `
-        <tr class="border-b border-gray-700">
-          <td class="p-3">${receipt.name}</td>
-          <td class="p-3">${receipt.amount} ₪</td>
-          <td class="p-3">${new Date(receipt.date).toLocaleDateString('he-IL')}</td>
-          <td class="p-3">${currentTeam || '-'}</td>
-          <td class="p-3">
-      `;
-
-      if (!currentTeam) {
-        html += `
-          <select id="select-${receipt.name}" class="bg-gray-900 border border-gray-600 rounded p-1 text-white">
-            ${teams.map(team => `<option value="${team}">${team}</option>`).join("")}
-          </select>
-          <button onclick="assignTeam('${receipt.name}')" class="ml-2 bg-blue-600 px-3 py-1 rounded">שייך</button>
-        `;
-      }
-
-      html += '</td></tr>';
+    const grouped = {};
+    teams.forEach(t => grouped[t] = []);
+    names.forEach(n => {
+      if (!grouped[n.team]) grouped[n.team] = [];
+      grouped[n.team].push(n.name);
     });
 
-    html += '</tbody></table></div>';
+    let html = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
+    [...teams, "+"].forEach(team => {
+      const isAddBox = team === "+";
+      html += `
+        <div class="bg-gray-800 rounded-lg p-4">
+          <h2 class="text-xl font-bold mb-2">${isAddBox ? "➕ הוסף צוות" : team}</h2>
+          ${isAddBox ? `
+            <input id="new-team-name" class="w-full mb-2 p-2 bg-gray-700 rounded" placeholder="שם צוות">
+            <button class="bg-green-600 px-3 py-1 rounded" onclick="addTeam()">צור צוות</button>
+          ` : `
+            <input id="input-${team}" class="w-full mb-2 p-2 bg-gray-700 rounded" placeholder="הוסף שם">
+            <ul id="list-${team}" class="space-y-1">
+              ${(grouped[team] || []).map(name => `
+                <li class="flex justify-between items-center bg-gray-700 px-2 py-1 rounded">
+                  ${name}
+                  <button onclick="removeName('${name}')" class="text-red-400 hover:text-red-600">✖</button>
+                </li>`).join("")}
+            </ul>
+          `}
+        </div>
+      `;
+    });
+    html += '</div>';
     container.innerHTML = html;
 
-    window.assignTeam = async (name) => {
-      const select = document.getElementById("select-" + name);
-      const team = select.value;
-      const res = await fetch(`${supabaseUrl}/rest/v1/name_to_team`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ name, team })
-      });
-
-      if (res.ok) {
-        alert("השם שויך בהצלחה 🎉");
-        location.reload();
-      } else {
-        alert("שגיאה בשיוך השם");
-      }
-    };
-
-    window.resetBudgets = async () => {
-      const defaultBudget = 1000;
-      const updates = await Promise.all(
-        teams.map(team =>
-          fetch(`${supabaseUrl}/rest/v1/teams?name=eq.${team}`, {
-            method: "PATCH",
+    teams.forEach(team => {
+      const input = document.getElementById(`input-${team}`);
+      input.addEventListener("keypress", async (e) => {
+        if (e.key === "Enter") {
+          const name = input.value.trim();
+          if (!name) return;
+          await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, {
+            method: "POST",
             headers,
-            body: JSON.stringify({ budget: defaultBudget })
-          })
-        )
-      );
+            body: JSON.stringify({ name, team })
+          });
+          location.reload();
+        }
+      });
+    });
 
-      if (updates.every(res => res.ok)) {
-        alert("התקציב אופס בהצלחה לכל הצוותים ✅");
-        location.reload();
-      } else {
-        alert("שגיאה באיפוס התקציב");
-      }
+    window.removeName = async (name) => {
+      await fetch(`${SUPABASE_URL}/rest/v1/name_to_team?name=eq.${name}`, {
+        method: "DELETE",
+        headers
+      });
+      location.reload();
     };
 
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = '<div class="p-6 text-red-500 text-center">שגיאה בטעינת הקבלות.</div>';
+    window.addTeam = () => {
+      const name = document.getElementById("new-team-name").value.trim();
+      if (!name) return alert("הכנס שם צוות");
+      alert("הוספת צוותים חדשים תתממש בהמשך ✨");
+    };
   }
 }
