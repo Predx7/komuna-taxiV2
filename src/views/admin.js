@@ -17,13 +17,13 @@ export async function renderAdmin(container) {
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const receiptsRes = await fetch(\`\${supabaseUrl}/rest/v1/receipts?date=gte.\${firstOfMonth}\`, { headers });
+    const receiptsRes = await fetch(`${supabaseUrl}/rest/v1/receipts?date=gte.${firstOfMonth}`, { headers });
     const receipts = await receiptsRes.json();
 
-    const namesRes = await fetch(\`\${supabaseUrl}/rest/v1/name_to_team\`, { headers });
+    const namesRes = await fetch(`${supabaseUrl}/rest/v1/name_to_team`, { headers });
     const nameToTeam = await namesRes.json();
 
-    let html = \`
+    let html = `
       <div class="p-6 text-white">
         <h1 class="text-2xl mb-4 font-bold">אזור ניהול</h1>
         <button onclick="resetBudgets()" class="mb-6 bg-red-600 px-4 py-2 rounded hover:bg-red-700">איפוס תקציב כללי</button>
@@ -38,28 +38,28 @@ export async function renderAdmin(container) {
             </tr>
           </thead>
           <tbody>
-    \`;
+    `;
 
     receipts.forEach((receipt) => {
       const existing = nameToTeam.find(n => n.name === receipt.name);
       const currentTeam = existing ? existing.team : null;
 
-      html += \`
+      html += `
         <tr class="border-b border-gray-700">
-          <td class="p-3">\${receipt.name}</td>
-          <td class="p-3">\${receipt.amount} ₪</td>
-          <td class="p-3">\${new Date(receipt.date).toLocaleDateString('he-IL')}</td>
-          <td class="p-3">\${currentTeam || '-'}</td>
+          <td class="p-3">${receipt.name}</td>
+          <td class="p-3">${receipt.amount} ₪</td>
+          <td class="p-3">${new Date(receipt.date).toLocaleDateString('he-IL')}</td>
+          <td class="p-3">${currentTeam || '-'}</td>
           <td class="p-3">
-      \`;
+      `;
 
       if (!currentTeam) {
-        html += \`
-          <select id="select-\${receipt.name}" class="bg-gray-900 border border-gray-600 rounded p-1 text-white">
-            \${teams.map(team => \`<option value="\${team}">\${team}</option>\`).join("")}
+        html += `
+          <select id="select-${receipt.name}" class="bg-gray-900 border border-gray-600 rounded p-1 text-white">
+            ${teams.map(team => `<option value="${team}">${team}</option>`).join("")}
           </select>
-          <button onclick="assignTeam('\${receipt.name}')" class="ml-2 bg-blue-600 px-3 py-1 rounded">שייך</button>
-        \`;
+          <button onclick="assignTeam('${receipt.name}')" class="ml-2 bg-blue-600 px-3 py-1 rounded">שייך</button>
+        `;
       }
 
       html += '</td></tr>';
@@ -71,7 +71,7 @@ export async function renderAdmin(container) {
     window.assignTeam = async (name) => {
       const select = document.getElementById("select-" + name);
       const team = select.value;
-      const res = await fetch(\`\${supabaseUrl}/rest/v1/name_to_team\`, {
+      const res = await fetch(`${supabaseUrl}/rest/v1/name_to_team`, {
         method: "POST",
         headers,
         body: JSON.stringify({ name, team })
@@ -89,7 +89,7 @@ export async function renderAdmin(container) {
       const defaultBudget = 1000;
       const updates = await Promise.all(
         teams.map(team =>
-          fetch(\`\${supabaseUrl}/rest/v1/teams?name=eq.\${team}\`, {
+          fetch(`${supabaseUrl}/rest/v1/teams?name=eq.${team}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify({ budget: defaultBudget })
