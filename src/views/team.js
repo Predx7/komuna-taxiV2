@@ -32,7 +32,6 @@ export async function renderTeam(container, teamName) {
     const teamRes = await fetch(\`\${supabaseUrl}/rest/v1/teams?name=eq.\${teamName}\`, { headers });
     const teamData = await teamRes.json();
     const budget = teamData.length > 0 ? teamData[0].budget : 0;
-
     const remaining = budget - totalSpent;
 
     container.innerHTML = \`
@@ -52,9 +51,8 @@ export async function renderTeam(container, teamName) {
         </ul>
       </div>
     \`;
-
   } catch (error) {
-    container.innerHTML = '<div class="p-6 text-red-500 text-center">שגיאה בטעינת הנתונים.</div>';
     console.error(error);
+    container.innerHTML = '<div class="p-6 text-red-500 text-center">שגיאה בטעינת הנתונים.</div>';
   }
 }
