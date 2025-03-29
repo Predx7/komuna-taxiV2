@@ -1,0 +1,24 @@
+
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>צוות</title>
+  <link rel="stylesheet" href="src/styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>🚖 צוות</h1>
+    <p id="teamName">...</p>
+    <p>התקציב שלך: ₪600</p>
+    <p>הוצאות החודש: ₪120</p>
+    <p>נותר לך: ₪480</p>
+  </div>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const team = urlParams.get('team');
+    document.getElementById("teamName").innerText = "שלום, צוות " + team;
+  </script>
+</body>
+</html>
