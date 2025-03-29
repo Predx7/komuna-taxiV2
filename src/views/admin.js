@@ -17,18 +17,16 @@ export async function renderAdmin(container) {
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    // שליפת קבלות מהחודש הנוכחי
     const receiptsRes = await fetch(\`\${supabaseUrl}/rest/v1/receipts?date=gte.\${firstOfMonth}\`, { headers });
     const receipts = await receiptsRes.json();
 
-    // שליפת שיוכים קיימים
     const namesRes = await fetch(\`\${supabaseUrl}/rest/v1/name_to_team\`, { headers });
     const nameToTeam = await namesRes.json();
 
-    // בניית HTML
     let html = \`
       <div class="p-6 text-white">
         <h1 class="text-2xl mb-4 font-bold">אזור ניהול</h1>
+        <button onclick="resetBudgets()" class="mb-6 bg-red-600 px-4 py-2 rounded hover:bg-red-700">איפוס תקציב כללי</button>
         <table class="w-full bg-gray-800 rounded-lg text-right">
           <thead>
             <tr class="border-b border-gray-600">
@@ -68,14 +66,11 @@ export async function renderAdmin(container) {
     });
 
     html += '</tbody></table></div>';
-
     container.innerHTML = html;
 
-    // פונקציית שיוך
     window.assignTeam = async (name) => {
       const select = document.getElementById("select-" + name);
       const team = select.value;
-
       const res = await fetch(\`\${supabaseUrl}/rest/v1/name_to_team\`, {
         method: "POST",
         headers,
@@ -87,6 +82,26 @@ export async function renderAdmin(container) {
         location.reload();
       } else {
         alert("שגיאה בשיוך השם");
+      }
+    };
+
+    window.resetBudgets = async () => {
+      const defaultBudget = 1000;
+      const updates = await Promise.all(
+        teams.map(team =>
+          fetch(\`\${supabaseUrl}/rest/v1/teams?name=eq.\${team}\`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ budget: defaultBudget })
+          })
+        )
+      );
+
+      if (updates.every(res => res.ok)) {
+        alert("התקציב אופס בהצלחה לכל הצוותים ✅");
+        location.reload();
+      } else {
+        alert("שגיאה באיפוס התקציב");
       }
     };
 
