@@ -1,4 +1,9 @@
 
+const SUPABASE_URL = "https://zehjecgkpjnmnbfqlkba.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaGplY2drcGpubW5iZnFsa2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNTA0NzAsImV4cCI6MjA1ODgyNjQ3MH0.uWSy84K8j4UMxsjDnx0ZReAymxfOb96fzINH_P3LnSo";
+
+// rest of the code is exactly the same as previous version
+
 export async function renderAdmin(container) {
   container.innerHTML = `
     <div class="p-6 text-white">
