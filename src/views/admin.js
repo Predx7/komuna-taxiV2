@@ -62,7 +62,7 @@ export async function renderAdmin(container) {
             <input id="new-team-name" class="w-full mb-2 p-2 bg-gray-700 rounded" placeholder="שם צוות">
             <button class="bg-green-600 px-3 py-1 rounded" onclick="addTeam()">צור צוות</button>
           ` : `
-            <input id="input-${team}" class="w-full mb-2 p-2 bg-gray-700 rounded" placeholder="הוסף שם">
+            <div class="flex gap-2 mb-2"><input id="input-${team}" class="flex-1 p-2 bg-gray-700 rounded" placeholder="הוסף שם"><button onclick="addNameToTeam(\'${team}\')" class="bg-green-500 px-3 py-1 rounded">✔️</button></div>
             <ul id="list-${team}" class="space-y-1">
               ${(grouped[team] || []).map(name => `
                 <li class="flex justify-between items-center bg-gray-700 px-2 py-1 rounded">
@@ -108,3 +108,21 @@ export async function renderAdmin(container) {
     };
   }
 }
+
+
+window.addNameToTeam = async (team) => {
+  const input = document.getElementById("input-" + team);
+  const name = input.value.trim();
+  if (!name) return;
+  const headers = {
+    apikey: SUPABASE_KEY,
+    Authorization: "Bearer " + SUPABASE_KEY,
+    "Content-Type": "application/json"
+  };
+  await fetch(`${SUPABASE_URL}/rest/v1/name_to_team`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name, team })
+  });
+  location.reload();
+};
