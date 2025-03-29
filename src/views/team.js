@@ -5,8 +5,8 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 export async function renderTeam(container, teamName) {
   container.innerHTML = "<h1 class='text-white text-xl mb-4'>טוען...</h1>";
 
-  if (!teamName) {
-    container.innerHTML = "<p class='text-red-500'>שגיאה בטעינת הנתונים.</p>";
+  if (!teamName || teamName === "team") {
+    container.innerHTML = "<p class='text-red-500'>שגיאה: יש לגשת לעמוד עם שם צוות. לדוגמה: /#/team/hulda</p>";
     return;
   }
 
