@@ -1,5 +1,6 @@
-import { router } from './router.js';
+import { initRouter } from './router.js';
+import './style.css';
 
 document.addEventListener('DOMContentLoaded', () => {
-  router();
+  initRouter();
 });
